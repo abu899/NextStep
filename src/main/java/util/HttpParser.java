@@ -2,7 +2,7 @@ package util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import webserver.dto.HeaderInfo;
+import webserver.dto.RequestLineInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +10,13 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HttpParser {
 
-    public static HeaderInfo parseHeaderInfo(String line) {
+    public static RequestLineInfo parseRequestLine(String line) {
         String[] splitHeader = line.split(" ");
-        if(splitHeader[1].split("\\?").length > 1) {
+        if (splitHeader[1].split("\\?").length > 1) {
             String[] splitPath = splitHeader[1].split("\\?");
-            return new HeaderInfo(splitHeader[0], splitPath[0], splitPath[1]);
+            return new RequestLineInfo(splitHeader[0], splitPath[0], splitPath[1]);
         }
-        return new HeaderInfo(splitHeader[0], splitHeader[1], null);
+        return new RequestLineInfo(splitHeader[0], splitHeader[1], null);
     }
 
     public static Map<String, String> parseContents(String contents) {
@@ -27,5 +27,10 @@ public class HttpParser {
             queryMap.put(split[0], split[1]);
         }
         return queryMap;
+    }
+
+    public static Integer readContentLength(String line) {
+        String[] headerTokens = line.split(":");
+        return Integer.parseInt(headerTokens[1].trim());
     }
 }

@@ -2,7 +2,7 @@ package util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import webserver.dto.HeaderInfo;
+import webserver.dto.RequestLineInfo;
 
 import java.util.Map;
 
@@ -17,11 +17,11 @@ class HttpParserTest {
         String line = "GET /index.html HTTP/1.1";
 
         // when
-        HeaderInfo headerInfo = HttpParser.parseHeaderInfo(line);
+        RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
 
         // then
-        assertThat(headerInfo.method()).isEqualTo("GET");
-        assertThat(headerInfo.path()).isEqualTo("/index.html");
+        assertThat(requestLineInfo.method()).isEqualTo("GET");
+        assertThat(requestLineInfo.path()).isEqualTo("/index.html");
     }
 
     @Test
@@ -31,12 +31,12 @@ class HttpParserTest {
         String line = "GET /user/create?userId=java&password=password HTTP/1.1";
 
         // when
-        HeaderInfo headerInfo = HttpParser.parseHeaderInfo(line);
+        RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
 
         // then
-        assertThat(headerInfo.method()).isEqualTo("GET");
-        assertThat(headerInfo.path()).isEqualTo("/user/create");
-        assertThat(headerInfo.queryString()).isEqualTo("userId=java&password=password");
+        assertThat(requestLineInfo.method()).isEqualTo("GET");
+        assertThat(requestLineInfo.path()).isEqualTo("/user/create");
+        assertThat(requestLineInfo.queryString()).isEqualTo("userId=java&password=password");
     }
 
     @Test
@@ -51,5 +51,31 @@ class HttpParserTest {
         // then
         assertThat(queryMap.get("userId")).isEqualTo("java");
         assertThat(queryMap.get("password")).isEqualTo("password");
+    }
+
+    @Test
+    @DisplayName("Content-Length를 파싱하여 반환한다")
+    void parseContentLength() {
+        // given
+        String line = "Content-Length: 11";
+
+        // when
+        Integer contentLength = HttpParser.readContentLength(line);
+
+        // then
+        assertThat(contentLength).isEqualTo(11);
+    }
+
+    @Test
+    @DisplayName("Content-Length가 없으면 null을 반환한다")
+    void parseContentLengthNull() {
+        // given
+        String line = "Content-Type: text/html;charset=utf-8";
+
+        // when
+        Integer contentLength = HttpParser.readContentLength(line);
+
+        // then
+        assertThat(contentLength).isNull();
     }
 }

@@ -2,11 +2,13 @@ package webserver;
 
 import lombok.extern.slf4j.Slf4j;
 import util.HttpParser;
-import webserver.dto.HeaderInfo;
+import webserver.domain.User;
+import webserver.dto.RequestLineInfo;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
 @Slf4j
 public class RequestHandler extends Thread {
@@ -24,21 +26,23 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
             String line = bufferedReader.readLine();
-            HeaderInfo headerInfo = HttpParser.parseHeaderInfo(line);
-            if(!headerInfo.method().equals("GET")) {
-                while (!"".equals(line)) {
-                    log.info("header : {}", line);
-                    line = bufferedReader.readLine();
-                    if (line == null) {
-                        return;
-                    }
-                }
+
+            log.debug("line = {}", line);
+            if (line == null) {
+                return;
             }
 
-            DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = Files.readAllBytes(new File("./webapp" + headerInfo.path()).toPath());
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
+            if (requestLineInfo.path().startsWith("/user/create")) {
+                Map<String, String> params = HttpParser.parseContents(requestLineInfo.queryString());
+                User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
+                log.debug("user = {}", user);
+            } else {
+                DataOutputStream dos = new DataOutputStream(out);
+                byte[] body = Files.readAllBytes(new File("./webapp" + requestLineInfo.path()).toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
         } catch (IOException e) {
             log.error(e.getMessage());
         }
