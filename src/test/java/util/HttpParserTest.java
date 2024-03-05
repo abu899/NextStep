@@ -78,4 +78,30 @@ class HttpParserTest {
         // then
         assertThat(contentLength).isNull();
     }
+
+    @Test
+    @DisplayName("쿠키에서 로그인 여부를 반환한다")
+    void isLogin() {
+        // given
+        String line = "Cookie: logined=true";
+
+        // when
+        boolean logined = HttpParser.isLogin(line);
+
+        // then
+        assertThat(logined).isTrue();
+    }
+
+    @Test
+    @DisplayName("쿠키가 없는 경우 로그인 상태는 false를 반환한다")
+    void isLoginFalse() {
+        // given
+        String line = "Content-Type: text/html;charset=utf-8";
+
+        // when
+        boolean logined = HttpParser.isLogin(line);
+
+        // then
+        assertThat(logined).isFalse();
+    }
 }

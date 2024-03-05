@@ -33,4 +33,14 @@ public class HttpParser {
         String[] headerTokens = line.split(":");
         return Integer.parseInt(headerTokens[1].trim());
     }
+
+    public static boolean isLogin(String line) {
+        String[] headerTokens = line.split(":");
+        Map<String, String> cookies = parseContents(headerTokens[1].trim());
+        if(!cookies.containsKey("logined")) {
+            return false;
+        }
+
+        return Boolean.parseBoolean(cookies.get("logined"));
+    }
 }

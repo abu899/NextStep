@@ -10,6 +10,7 @@ import webserver.dto.RequestLineInfo;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,15 +40,19 @@ public class RequestHandler extends Thread {
             RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
             String url = getDefaultUrl(requestLineInfo.path());
             int contentLength = 0;
+            boolean logined = false;
             while (!line.equals("")) {
                 log.debug("header : {}", line);
                 line = bufferedReader.readLine();
                 if (line.contains("Content-Length")) {
                     contentLength = HttpParser.readContentLength(line);
                 }
+                if (line.contains("Cookie")) {
+                    logined = HttpParser.isLogin(line);
+                }
             }
 
-            if (requestLineInfo.path().startsWith("/user/create")) {
+            if (url.equals("/user/create")) {
                 String body = IOUtils.readData(bufferedReader, contentLength);
                 Map<String, String> params = HttpParser.parseContents(body);
                 User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
@@ -55,7 +60,7 @@ public class RequestHandler extends Thread {
                 DataBase.addUser(user);
                 DataOutputStream dataOutputStream = new DataOutputStream(out);
                 response302Header(dataOutputStream, "/index.html");
-            } else if (requestLineInfo.path().startsWith("/user/login")) {
+            } else if (url.equals("/user/login")) {
                 String body = IOUtils.readData(bufferedReader, contentLength);
                 Map<String, String> params = HttpParser.parseContents(body);
                 Optional<User> userOptional = DataBase.findUserById(params.get("userId"));
@@ -71,15 +76,46 @@ public class RequestHandler extends Thread {
                 } else {
                     responseWithResource(dataOutputStream, "/user/login_failed.html");
                 }
+            } else if (url.equals("/user/list")) {
+                DataOutputStream dataOutputStream = new DataOutputStream(out);
+
+                if (!logined) {
+                    responseWithResource(dataOutputStream, "/user/login.html");
+                    return;
+                }
+
+                List<User> users = DataBase.findAll();
+                StringBuilder sb = new StringBuilder();
+                sb.append("<table border='1'>");
+                for (User user : users) {
+                    sb.append("<tr>");
+                    sb.append("<td>" + user.getUserId() + "</td>");
+                    sb.append("<td>" + user.getName() + "</td>");
+                    sb.append("<td>" + user.getEmail() + "</td>");
+                    sb.append("</tr>");
+                }
+                sb.append("</table>");
+
+                byte[] body = sb.toString().getBytes();
+                response200Header(dataOutputStream, body.length);
+                responseBody(dataOutputStream, body);
+            } else if (url.endsWith(".css")) {
+                DataOutputStream dos = new DataOutputStream(out);
+                byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+                response200WithCss(dos, body.length);
+                responseBody(dos, Files.readAllBytes(new File("./webapp" + url).toPath()));
+
             } else {
                 DataOutputStream dos = new DataOutputStream(out);
                 byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
                 response200Header(dos, body.length);
                 responseBody(dos, body);
             }
-        } catch (IOException e) {
+        } catch (
+                IOException e) {
             log.error(e.getMessage());
         }
+
     }
 
     private String getDefaultUrl(String path) {
@@ -94,6 +130,17 @@ public class RequestHandler extends Thread {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void response200WithCss(DataOutputStream dos, int length) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + length + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
