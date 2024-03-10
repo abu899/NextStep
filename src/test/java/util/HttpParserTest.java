@@ -3,6 +3,7 @@ package util;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import webserver.dto.RequestLineInfo;
+import webserver.http.HttpMethod;
 
 import java.util.Map;
 
@@ -20,8 +21,8 @@ class HttpParserTest {
         RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
 
         // then
-        assertThat(requestLineInfo.method()).isEqualTo("GET");
-        assertThat(requestLineInfo.path()).isEqualTo("/index.html");
+        assertThat(requestLineInfo.getMethod()).isEqualTo(HttpMethod.GET);
+        assertThat(requestLineInfo.getPath()).isEqualTo("/index.html");
     }
 
     @Test
@@ -34,9 +35,9 @@ class HttpParserTest {
         RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
 
         // then
-        assertThat(requestLineInfo.method()).isEqualTo("GET");
-        assertThat(requestLineInfo.path()).isEqualTo("/user/create");
-        assertThat(requestLineInfo.queryString()).isEqualTo("userId=java&password=password");
+        assertThat(requestLineInfo.getMethod()).isEqualTo(HttpMethod.GET);
+        assertThat(requestLineInfo.getPath()).isEqualTo("/user/create");
+        assertThat(requestLineInfo.getQueryString()).isEqualTo("userId=java&password=password");
     }
 
     @Test
@@ -46,7 +47,7 @@ class HttpParserTest {
         String queryString = "userId=java&password=password";
 
         // when
-        Map<String, String> queryMap = HttpParser.parseContents(queryString);
+        Map<String, String> queryMap = HttpParser.parseContents(queryString, "&");
 
         // then
         assertThat(queryMap.get("userId")).isEqualTo("java");
@@ -54,54 +55,17 @@ class HttpParserTest {
     }
 
     @Test
-    @DisplayName("Content-Length를 파싱하여 반환한다")
-    void parseContentLength() {
-        // given
-        String line = "Content-Length: 11";
-
-        // when
-        Integer contentLength = HttpParser.readContentLength(line);
-
-        // then
-        assertThat(contentLength).isEqualTo(11);
-    }
-
-    @Test
-    @DisplayName("Content-Length가 없으면 null을 반환한다")
-    void parseContentLengthNull() {
-        // given
-        String line = "Content-Type: text/html;charset=utf-8";
-
-        // when
-        Integer contentLength = HttpParser.readContentLength(line);
-
-        // then
-        assertThat(contentLength).isNull();
-    }
-
-    @Test
     @DisplayName("쿠키에서 로그인 여부를 반환한다")
     void isLogin() {
         // given
-        String line = "Cookie: logined=true";
+        String line = "logined=true;test=false";
 
         // when
-        boolean logined = HttpParser.isLogin(line);
+        Map<String, String> cookieMap = HttpParser.parseCookies(line);
 
         // then
-        assertThat(logined).isTrue();
-    }
-
-    @Test
-    @DisplayName("쿠키가 없는 경우 로그인 상태는 false를 반환한다")
-    void isLoginFalse() {
-        // given
-        String line = "Content-Type: text/html;charset=utf-8";
-
-        // when
-        boolean logined = HttpParser.isLogin(line);
-
-        // then
-        assertThat(logined).isFalse();
+        assertThat(cookieMap.size()).isEqualTo(2);
+        assertThat(Boolean.parseBoolean(cookieMap.get("logined"))).isTrue();
+        assertThat(Boolean.parseBoolean(cookieMap.get("test"))).isFalse();
     }
 }

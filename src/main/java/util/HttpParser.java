@@ -19,8 +19,12 @@ public class HttpParser {
         return new RequestLineInfo(splitHeader[0], splitHeader[1], null);
     }
 
-    public static Map<String, String> parseContents(String contents) {
-        String[] splitQuery = contents.split("&");
+    public static Map<String, String> parseContents(String contents, String separator) {
+        if(contents == null) {
+            return new HashMap<>();
+        }
+
+        String[] splitQuery = contents.split(separator);
         Map<String, String> queryMap = new HashMap<>();
         for (String query : splitQuery) {
             String[] split = query.split("=");
@@ -29,18 +33,7 @@ public class HttpParser {
         return queryMap;
     }
 
-    public static Integer readContentLength(String line) {
-        String[] headerTokens = line.split(":");
-        return Integer.parseInt(headerTokens[1].trim());
-    }
-
-    public static boolean isLogin(String line) {
-        String[] headerTokens = line.split(":");
-        Map<String, String> cookies = parseContents(headerTokens[1].trim());
-        if(!cookies.containsKey("logined")) {
-            return false;
-        }
-
-        return Boolean.parseBoolean(cookies.get("logined"));
+    public static Map<String, String> parseCookies(String line) {
+        return parseContents(line, ";");
     }
 }

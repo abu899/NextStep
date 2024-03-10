@@ -6,6 +6,7 @@ import util.IOUtils;
 import webserver.db.DataBase;
 import webserver.domain.User;
 import webserver.dto.RequestLineInfo;
+import webserver.http.HttpRequest;
 
 import java.io.*;
 import java.net.Socket;
@@ -29,46 +30,27 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream();
              OutputStream out = connection.getOutputStream()) {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-            String line = bufferedReader.readLine();
-
-            log.debug("line = {}", line);
-            if (line == null) {
-                return;
-            }
-
-            RequestLineInfo requestLineInfo = HttpParser.parseRequestLine(line);
-            String url = getDefaultUrl(requestLineInfo.path());
-            int contentLength = 0;
-            boolean logined = false;
-            while (!line.equals("")) {
-                log.debug("header : {}", line);
-                line = bufferedReader.readLine();
-                if (line.contains("Content-Length")) {
-                    contentLength = HttpParser.readContentLength(line);
-                }
-                if (line.contains("Cookie")) {
-                    logined = HttpParser.isLogin(line);
-                }
-            }
+            HttpRequest request = new HttpRequest(in);
+            String url = getDefaultUrl(request.getPath());
 
             if (url.equals("/user/create")) {
-                String body = IOUtils.readData(bufferedReader, contentLength);
-                Map<String, String> params = HttpParser.parseContents(body);
-                User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
+                User user = new User(
+                        request.getParameter("userId"),
+                        request.getParameter("password"),
+                        request.getParameter("name"),
+                        request.getParameter("email")
+                );
                 log.debug("user = {}", user);
                 DataBase.addUser(user);
                 DataOutputStream dataOutputStream = new DataOutputStream(out);
                 response302Header(dataOutputStream, "/index.html");
             } else if (url.equals("/user/login")) {
-                String body = IOUtils.readData(bufferedReader, contentLength);
-                Map<String, String> params = HttpParser.parseContents(body);
-                Optional<User> userOptional = DataBase.findUserById(params.get("userId"));
+                Optional<User> userOptional = DataBase.findUserById(request.getParameter("userId"));
 
                 DataOutputStream dataOutputStream = new DataOutputStream(out);
                 if (userOptional.isPresent()) {
                     User user = userOptional.get();
-                    if (user.getPassword().equals(params.get("password"))) {
+                    if (user.getPassword().equals(request.getParameter("password"))) {
                         response302WithCookie(dataOutputStream);
                         return;
                     }
@@ -79,7 +61,7 @@ public class RequestHandler extends Thread {
             } else if (url.equals("/user/list")) {
                 DataOutputStream dataOutputStream = new DataOutputStream(out);
 
-                if (!logined) {
+                if (!request.isLogin()) {
                     responseWithResource(dataOutputStream, "/user/login.html");
                     return;
                 }
