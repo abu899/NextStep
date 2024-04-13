@@ -1,2 +1,3 @@
 rootProject.name = 'NextStep'
+include 'mvc'
 

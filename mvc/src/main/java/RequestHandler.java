@@ -1,14 +1,15 @@
-package webserver;
-
+import controller.Controller;
+import http.HttpRequest;
+import http.HttpResponse;
 import lombok.extern.slf4j.Slf4j;
-import webserver.controller.Controller;
-import webserver.http.HttpRequest;
-import webserver.http.HttpResponse;
+import util.HttpParser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 public class RequestHandler extends Thread {
@@ -28,6 +29,10 @@ public class RequestHandler extends Thread {
             HttpRequest request = new HttpRequest(in);
             HttpResponse response = new HttpResponse(out);
 
+            if (request.getCookies().getCookie("JSESSIONID") == null) {
+                response.addHeader("Set-Cookie", "JSESSIONID=" + UUID.randomUUID());
+            }
+
             Controller controller = RequestMapping.getController(request.getPath());
             if (controller == null) {
                 String url = getDefaultUrl(request.getPath());
@@ -35,8 +40,7 @@ public class RequestHandler extends Thread {
             } else {
                 controller.service(request, response);
             }
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
@@ -46,5 +50,10 @@ public class RequestHandler extends Thread {
             path = "/index.html";
         }
         return path;
+    }
+
+    private String getSessionId(String cookieValue) {
+        Map<String, String> cookies = HttpParser.parseCookies(cookieValue);
+        return cookies.get("JSESSIONID");
     }
 }
