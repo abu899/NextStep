@@ -1,42 +1,24 @@
 package controller;
 
 import core.db.DataBase;
-import http.HttpRequest;
-import http.HttpResponse;
-import http.HttpSession;
-import lombok.extern.slf4j.Slf4j;
-import model.User;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import util.UserSessionUtils;
 
-import java.util.List;
+import java.io.Serial;
 
-@Slf4j
-public class ListUserController extends AbstractController {
+@WebServlet("/users")
+public class ListUserController implements Controller {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Override
-    protected void doGet(HttpRequest request, HttpResponse response) {
-        if (!isLogined(request.getSession())) {
-            response.sendRedirect("/user/login.html");
-            return;
+    public String execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        if (UserSessionUtils.isLogined(req.getSession())) {
+            return "redirect:/user/loginForm";
         }
-
-        List<User> users = DataBase.findAll();
-        StringBuilder sb = new StringBuilder();
-        sb.append("<table border='1'>");
-        for (User user : users) {
-            sb.append("<tr>");
-            sb.append("<td>" + user.getUserId() + "</td>");
-            sb.append("<td>" + user.getName() + "</td>");
-            sb.append("<td>" + user.getEmail() + "</td>");
-            sb.append("</tr>");
-        }
-        sb.append("</table>");
-        response.forwardBody(sb.toString());
-    }
-
-    private static boolean isLogined(HttpSession session) {
-        Object user = session.getAttribute("user");
-        if (user == null) {
-            return false;
-        }
-        return true;
+        req.setAttribute("users", DataBase.findAll());
+        return "/user/list.jsp";
     }
 }

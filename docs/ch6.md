@@ -50,3 +50,37 @@ HttpSession의 가장 중요하고 핵심이 되는 메서드이다.
 - void invalidate()
   - 현재 세션에 저장되어 있는 모든 값을 삭제
 
+## 6.4 MVC 프레임워크 요구사항 1단계
+
+### 6.4.1 요구사항
+
+RequestHandler에서 요청 URL에 따라 분기 처리하듯, 
+서블릿 또한 하나의 서블릿이 요청을 받은 후 분기 처리하는 방식으로 구현하면 된다.
+
+MVC 패턴은 기본적으로 사용자의 최초 진입 지점이 컨트롤러가 된다.
+모든 클라이언트 요청은 먼저 `DispatcherServlet`이 받아서 요청 URL에 따라
+해당 컨트롤러에 작업을 위임하도록 구현할 수 있다.
+
+단, CSS, 자바스크립트, 이미지와 같은 정적 자원은 굳이 컨트롤러가 필요하지 않다.
+문제를 해결하기 위해 CSS, 자바스크립트, 이미지를 처리하는 `서블릿 필터`를 추가해 해결할 수 있다.
+
+## 6.5 프레임워크 구현 1단계
+
+서블릿 매핑을 "/"로 하면 모든 요청 URL이 DispatcherServlet으로 연결된다.
+"/*"로 매핑도 가능하지만, 이 경우 모든 JSP 요청 또한 DispatcherServlet으로 연결된다.
+
+"/" 매핑은 매핑되어 있는 서블릿, JSP 요청외 자바스크립트, CSS, 이미지와 같은 요청을 처리하게 된다.
+톰캣 서버는 기본적으로 "/" 설정이 `default`라는 이름의 서블릿을 매핑해 정적 자원을 처리하도록 구현되어있다.
+이 설정을 DispatcherServlet에서 재정의하여 JSP에 대한 처리는 하지 않고 그 외의 요청을 처리할 수 있다.
+
+기존 default 서블릿에서 처리하던 정적 자원에 대한 처리는 ResourceFilter라는 서블릿 필터를 통해 default 서블릿이 처리하도록 위임한다.
+> this.defaultRequestDispatcher = filterConfig.getServletContext().getNamedDispatcher("default");
+
+서블릿을 매핑할 때 loadonStartup 설정은 `서블릿 인스턴스 생성 시점과 초기화 메서드 호출 시점을 결정`하는 설정이다.
+이를 설정하지 않으면 서블릿 인스턴스 생성과 초기화는 서블릿 컨테이너가 시작 후, 클라이언트의 최초 요청이 발생했을 때 진행된다.
+
+DispatcherServlet의 move() 메서드는 각 서블릿에서 서블릿, JSP 사이를 이동하기 위해
+필요한 중복 코드를 담당한다.
+
+이런 구조의 MVC 프레임워크 패턴을 프론트 컨트롤러 패턴(Front Controller Pattern)이라고 한다.
+컨트롤러 앞에 모든 요청을 받아(DispatcherServlet) 각 컨트롤러에 작업을 위임하는 방식으로 구현된다.

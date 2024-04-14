@@ -1,8 +1,8 @@
 package controller;
 
-import http.HttpRequest;
-import http.HttpResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface Controller {
-    void service(HttpRequest request, HttpResponse response);
+    String execute(HttpServletRequest req, HttpServletResponse resp) throws Exception;
 }

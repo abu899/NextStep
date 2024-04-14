@@ -1,23 +1,25 @@
 package controller;
 
 import core.db.DataBase;
-import http.HttpRequest;
-import http.HttpResponse;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import model.User;
 
+@WebServlet("/user/create")
 @Slf4j
-public class CreateUserController extends AbstractController {
+public class CreateUserController implements Controller {
     @Override
-    protected void doPost(HttpRequest request, HttpResponse response) {
+    public String execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         User user = new User(
-                request.getParameter("userId"),
-                request.getParameter("password"),
-                request.getParameter("name"),
-                request.getParameter("email")
-        );
-        log.debug("user = {}", user);
+                req.getParameter("userId"),
+                req.getParameter("password"),
+                req.getParameter("name"),
+                req.getParameter("email"));
+        log.debug("User : {}", user);
+
         DataBase.addUser(user);
-        response.sendRedirect("/index.html");
+        return "redirect:/";
     }
 }
