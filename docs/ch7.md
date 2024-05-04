@@ -49,3 +49,7 @@ Exception은 반드시 필요한 부분이지만 무분별하게 사용 시 가�
 메소드가 한 가지 작업만 처리하도록 작은 단위로 분리하면 중복 코드가 명백하게 드러난다.
 
 ### 7.4.2 클래스 분리
+### 7.4.3 UserDao와 InsertJdbcTemplate의 의존관계 분리
+### 7.4.4 InserJdbcTemplate, UpdateJdbcTemplate 통합
+### 7.4.5 User 의존관계 제거 및 SQL 쿼리를 파라미터로 전달
+### 7.4.6 SELECT 문에 대한 리팩토링
