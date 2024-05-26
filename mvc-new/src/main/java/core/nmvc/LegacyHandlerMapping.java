@@ -1,5 +1,9 @@
-package core.mvc;
+package core.nmvc;
 
+import core.mvc.Controller;
+import core.mvc.DispatcherServlet;
+import core.mvc.ForwardController;
+import jakarta.servlet.http.HttpServletRequest;
 import next.controller.HomeController;
 import next.controller.qna.*;
 import next.controller.user.*;
@@ -9,11 +13,11 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RequestMapping {
+public class LegacyHandlerMapping implements HandlerMapping {
     private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
     private Map<String, Controller> mappings = new HashMap<>();
 
-    void initMapping() {
+    public void initMapping() {
         mappings.put("/", new HomeController());
         mappings.put("/users/form", new ForwardController("/user/form.jsp"));
         mappings.put("/users/loginForm", new ForwardController("/user/login.jsp"));
@@ -44,5 +48,10 @@ public class RequestMapping {
 
     void put(String url, Controller controller) {
         mappings.put(url, controller);
+    }
+
+    @Override
+    public Controller getHandler(HttpServletRequest request) {
+        return findController(request.getRequestURI());
     }
 }
