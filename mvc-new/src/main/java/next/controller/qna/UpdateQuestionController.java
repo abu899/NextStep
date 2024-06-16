@@ -4,12 +4,14 @@ import core.mvc.AbstractController;
 import core.mvc.ModelAndView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import next.controller.UserSessionUtils;
 import next.dao.QuestionDao;
 import next.model.Question;
 
+@RequiredArgsConstructor
 public class UpdateQuestionController extends AbstractController {
-    private QuestionDao questionDao = QuestionDao.getInstance();
+    private final QuestionDao questionDao;
 
     @Override
     public ModelAndView execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {

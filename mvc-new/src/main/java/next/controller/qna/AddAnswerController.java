@@ -4,6 +4,7 @@ import core.mvc.AbstractController;
 import core.mvc.ModelAndView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import next.controller.UserSessionUtils;
 import next.dao.AnswerDao;
 import next.dao.QuestionDao;
@@ -13,11 +14,12 @@ import next.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RequiredArgsConstructor
 public class AddAnswerController extends AbstractController {
     private static final Logger log = LoggerFactory.getLogger(AddAnswerController.class);
 
-    private QuestionDao questionDao = QuestionDao.getInstance();
-    private AnswerDao answerDao = AnswerDao.getInstance();
+    private final QuestionDao questionDao;
+    private final AnswerDao answerDao;
 
     @Override
     public ModelAndView execute(HttpServletRequest req, HttpServletResponse response) throws Exception {

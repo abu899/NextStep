@@ -4,13 +4,15 @@ import core.mvc.AbstractController;
 import core.mvc.ModelAndView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import next.CannotDeleteException;
 import next.controller.UserSessionUtils;
 import next.model.Result;
 import next.service.QnaService;
 
+@RequiredArgsConstructor
 public class ApiDeleteQuestionController extends AbstractController {
-    private QnaService qnaService = QnaService.getInstance();
+    private final QnaService qnaService;
 
     @Override
     public ModelAndView execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {
