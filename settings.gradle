@@ -1,4 +1,5 @@
 rootProject.name = 'NextStep'
 include 'mvc'
 include 'mvc-new'
+include 'di-start'
 
